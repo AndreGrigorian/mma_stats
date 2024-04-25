@@ -17,6 +17,7 @@ driver = webdriver.Firefox(options=options)
 
 
 def findFighter(name: str):
+    # use search bar to find fighters page url; %20 = " "
     fighterName = name.replace(" ", "%20").lower()
     url = f'https://www.espn.com/search/_/q/{fighterName}'
     driver.get(url)
@@ -31,8 +32,9 @@ def findFighter(name: str):
 
 def numberOfTimesTakendown(name: str):
     # expand list of fighters fought
-    fighterUrl = findFighter(name).replace('fighter', 'fighter/history')
-    driver.get(fighterUrl)
+    fighterUrl = findFighter(name)
+    fighterHistoryUrl = fighterUrl.replace('fighter', 'fighter/history')
+    driver.get(fighterHistoryUrl)
 
     # wait for browser to load content
     table = WebDriverWait(driver, 10).until(
@@ -52,11 +54,15 @@ def numberOfTimesTakendown(name: str):
         opponent = driver.find_element(
             By.XPATH, f'/html/body/div[1]/div/div/div/div/main/div[2]/div[5]/div/div[1]/section/div/div/div/div/div[2]/table/tbody/tr[{rowIndex+1}]/td[2]/a')
         opponentUrl = opponent.get_attribute("href")
+
+        event = driver.find_element(
+            By.XPATH, f'/html/body/div[1]/div/div/div/div/main/div[2]/div[5]/div/div[1]/section/div/div/div/div/div[2]/table/tbody/tr[{rowIndex+1}]/td[7]/*')
         # only consider oppenents fought in the UFC
-        opponentUrls.append(opponentUrl)
+        if "UFC" in event.text:
+            opponentUrls.append(opponentUrl)
 
     for opponentUrl in opponentUrls:
-        print(f'{opponentUrls.index(opponentUrl)}/{len(opponentUrls)}')
+        print(f'{opponentUrls.index(opponentUrl)+1}/{len(opponentUrls)}')
         # navigate to opponents stats
         statsUrl = opponentUrl.replace('fighter', 'fighter/stats')
         driver.get(statsUrl)
