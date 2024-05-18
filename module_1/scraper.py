@@ -45,8 +45,10 @@ def numberOfTimesTakendown(name: str):
     table = table.find_element(By.TAG_NAME, 'tbody')
     rows = table.find_elements(By.TAG_NAME, 'tr')
 
+    takenDownData = {'Total': 0}
     timesTakenDown = 0
     opponentUrls = []
+    opponentNames = []
 
     # crawl through each opponents stats, tally how many times they've taken down specified fighter
     print('counting...')
@@ -54,15 +56,18 @@ def numberOfTimesTakendown(name: str):
         opponent = driver.find_element(
             By.XPATH, f'/html/body/div[1]/div/div/div/div/main/div[2]/div[5]/div/div[1]/section/div/div/div/div/div[2]/table/tbody/tr[{rowIndex+1}]/td[2]/a')
         opponentUrl = opponent.get_attribute("href")
+        
 
         event = driver.find_element(
             By.XPATH, f'/html/body/div[1]/div/div/div/div/main/div[2]/div[5]/div/div[1]/section/div/div/div/div/div[2]/table/tbody/tr[{rowIndex+1}]/td[7]/*')
         # only consider oppenents fought in the UFC
         if "UFC" in event.text:
             opponentUrls.append(opponentUrl)
+            opponentNames.append(opponent.text)
 
-    for opponentUrl in opponentUrls:
-        print(f'{opponentUrls.index(opponentUrl)+1}/{len(opponentUrls)}')
+    for i in range(len(opponentUrls)):
+        opponentUrl = opponentUrls[i]
+        print(f'{i+1}/{len(opponentUrls)}')
         # navigate to opponents stats
         statsUrl = opponentUrl.replace('fighter', 'fighter/stats')
         driver.get(statsUrl)
@@ -74,6 +79,7 @@ def numberOfTimesTakendown(name: str):
         except Exception as e:
             print("opponent's ufc stats not availble.")
             continue
+
 
         table = table.find_element(By.TAG_NAME, 'tbody')
         opponentRows = table.find_elements(By.TAG_NAME, 'tr')
@@ -88,9 +94,14 @@ def numberOfTimesTakendown(name: str):
                 numOnly = re.findall(r'\d+', takedownAmmount.text)
                 numOnly = ''.join(numOnly)
                 if numOnly:
-                    timesTakenDown += int(numOnly)
-    return timesTakenDown
+                    numOnly = int(numOnly)
+                    timesTakenDown += numOnly
+                    if(numOnly > 0):
+                        takenDownData[opponentNames[i]] = numOnly
+
+    takenDownData['Total'] = timesTakenDown
+    return takenDownData
 
 
-print(numberOfTimesTakendown("khabib nurmagomedov"))
+print(numberOfTimesTakendown("islam makhachev"))  # for testing purposes
 driver.quit()
